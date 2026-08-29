@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tabi — Demo</title>
+<style>
+  :root{
+    --ground:#FAFAFB; --raised:#FFF; --ink:#15181D; --muted:#5B626E;
+    --faint:#9096A1; --line:#E3E5E9; --accent:#1A56DB; --accentSoft:#EFF4FE;
+    --warn:#B45309; --warnSoft:#FDF3E7;
+    --km:"Kantumruy Pro","Khmer Sangam MN","Noto Sans Khmer","Khmer MN",sans-serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--ground:#0E1013;--raised:#171A1F;--ink:#EDEFF2;--muted:#9BA2AE;
+      --faint:#6B7280;--line:#2A2F37;--accent:#7CA0F0;--accentSoft:#17223A;
+      --warn:#E3A857;--warnSoft:#2A2113;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--km),var(--sans);line-height:1.75;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:560px;margin:0 auto;padding:56px 24px 80px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--faint);margin:0 0 14px}
+  h1{font-size:34px;line-height:1.25;letter-spacing:-.02em;font-weight:600;margin:0 0 10px}
+  .sub{color:var(--muted);margin:0 0 32px}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--raised);
+    border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:14px;
+    transition:border-color .15s,transform .12s}
+  a.card:hover{border-color:var(--accent)}
+  a.card:active{transform:scale(.99)}
+  .t{font-size:19px;font-weight:600;margin:0 0 4px}
+  .d{color:var(--muted);font-size:15px;margin:0}
+  .go{color:var(--accent);font-weight:600;font-size:15px;margin-top:12px;display:block}
+  .note{background:var(--warnSoft);color:var(--warn);border-radius:12px;
+    padding:14px 18px;font-size:15px;margin:28px 0 0}
+  .note code{font-family:var(--mono);font-size:14px;background:rgba(0,0,0,.06);
+    padding:1px 6px;border-radius:4px}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:11px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Tabi · តាប៊ី — Demo</p>
+  <h1>ដំណើរការសាកល្បង</h1>
+  <p class="sub">កម្មវិធីកក់ដំណើរតាក់ស៊ីអន្តរខេត្តសម្រាប់កម្ពុជា។
+    ទាំងពីរខាងក្រោមដំណើរការក្នុងកម្មវិធីរុករក — មិនចាំបាច់ដំឡើងទេ។</p>
+
+  <a class="card" href="app/">
+    <p class="t">កម្មវិធីពិត</p>
+    <p class="d">Flutter · ចូលប្រើ → ស្វែងរក → ជ្រើសកៅអី។
+      ទិន្នន័យនៅជាការសាកល្បង។</p>
+    <span class="go">បើកកម្មវិធី →</span>
+  </a>
+
+  <a class="card" href="prototype/">
+    <p class="t">Prototype រចនា</p>
+    <p class="d">លំហូរពេញលេញរហូតដល់សំបុត្រ QR ព្រមទាំងលំហូរបរាជ័យ។
+      មានប៊ូតុងសាកល្បង offline · អក្សរធំ · ងងឹត។</p>
+    <span class="go">បើក prototype →</span>
+  </a>
+
+  <p class="note">ចូលប្រើដោយលេខទូរសព្ទណាមួយ រួចប្រើលេខកូដ <code>123456</code>។
+    គ្មានទិន្នន័យពិត និងគ្មានការបង់ប្រាក់ពិតទេ។</p>
+
+  <footer>ChhaiyaCoding · demo build</footer>
+</div>
+</body>
+</html>

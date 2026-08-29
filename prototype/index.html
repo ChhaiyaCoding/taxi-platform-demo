@@ -1,0 +1,768 @@
+<meta charset="utf-8">
+<title>Tabi — Interactive Booking Prototype</title>
+
+<style>
+:root{
+  --ground:#F5F6F8;--raised:#FFF;--sunken:#F1F2F4;--ink:#15181D;--muted:#5B626E;
+  --faint:#9096A1;--hairline:#E3E5E9;--hairline2:#EEF0F3;
+  --accent:#1A56DB;--accentSoft:#EFF4FE;--warn:#B45309;--warnSoft:#FDF3E7;
+  --ok:#0F7B3E;--okSoft:#E9F5EE;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --km:"Kantumruy Pro","Khmer Sangam MN","Noto Sans Khmer","Khmer MN",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --fs:1;
+}
+@media(prefers-color-scheme:dark){:root{
+  --ground:#0B0D10;--raised:#171A1F;--sunken:#1E2228;--ink:#EDEFF2;--muted:#9BA2AE;
+  --faint:#6B7280;--hairline:#2A2F37;--hairline2:#23272E;
+  --accent:#7CA0F0;--accentSoft:#17223A;--warn:#E3A857;--warnSoft:#2A2113;
+  --ok:#5CC98B;--okSoft:#13251B;}}
+:root[data-theme=dark]{--ground:#0B0D10;--raised:#171A1F;--sunken:#1E2228;--ink:#EDEFF2;--muted:#9BA2AE;--faint:#6B7280;--hairline:#2A2F37;--hairline2:#23272E;--accent:#7CA0F0;--accentSoft:#17223A;--warn:#E3A857;--warnSoft:#2A2113;--ok:#5CC98B;--okSoft:#13251B}
+:root[data-theme=light]{--ground:#F5F6F8;--raised:#FFF;--sunken:#F1F2F4;--ink:#15181D;--muted:#5B626E;--faint:#9096A1;--hairline:#E3E5E9;--hairline2:#EEF0F3;--accent:#1A56DB;--accentSoft:#EFF4FE;--warn:#B45309;--warnSoft:#FDF3E7;--ok:#0F7B3E;--okSoft:#E9F5EE}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+.km{font-family:var(--km);line-height:1.7}
+.lab{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+.head{margin-bottom:32px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 12px}
+h1{font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.02em;font-weight:600;margin:0 0 12px}
+.sf{color:var(--muted);margin:0;max-width:60ch}
+.stage{display:grid;grid-template-columns:auto 1fr;gap:44px;align-items:start}
+@media(max-width:880px){.stage{grid-template-columns:1fr;gap:28px}}
+
+/* ── device ── */
+.device{width:390px;flex:none}
+.phone{width:390px;height:820px;background:var(--raised);border:1px solid var(--hairline);
+  border-radius:44px;padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.14);position:relative}
+.screen{width:100%;height:100%;background:var(--raised);border-radius:33px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative;font-size:calc(15px*var(--fs))}
+.status{display:flex;justify-content:space-between;padding:12px 22px 4px;font-size:12px;
+  font-weight:600;color:var(--ink);flex:none}
+.viewport{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 20px;scrollbar-width:none}
+.viewport::-webkit-scrollbar{display:none}
+.tabbar{flex:none;display:flex;border-top:1px solid var(--hairline);background:var(--raised);
+  padding:8px 0 20px}
+.tabbar button{flex:1;background:none;border:0;cursor:pointer;color:var(--faint);
+  font-family:var(--km);font-size:calc(11px*var(--fs));display:flex;flex-direction:column;
+  align-items:center;gap:3px;padding:4px 0}
+.tabbar button.on{color:var(--accent)}
+.tabbar .ic{font-size:19px;line-height:1}
+
+/* ── controls ── */
+.panel{position:sticky;top:32px}
+.grp{border:1px solid var(--hairline);border-radius:14px;background:var(--raised);
+  padding:18px 20px;margin-bottom:16px}
+.grp h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);font-weight:500;margin:0 0 14px}
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+.tg{border:1px solid var(--hairline);background:none;color:var(--muted);border-radius:999px;
+  padding:7px 14px;font-size:13px;cursor:pointer;font-family:var(--km)}
+.tg:hover{border-color:var(--faint)}
+.tg.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.tg.warnon{background:var(--warn);border-color:var(--warn);color:#fff;font-weight:600}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;padding:9px 0 9px 30px;position:relative;font-size:14px;
+  color:var(--muted);border-bottom:1px solid var(--hairline2);font-family:var(--km);line-height:1.65}
+.steps li:last-child{border:0}
+.steps li::before{content:counter(s);position:absolute;left:0;top:11px;width:19px;height:19px;
+  border-radius:50%;background:var(--sunken);color:var(--faint);font-family:var(--mono);
+  font-size:10px;display:grid;place-items:center}
+.steps li.done{color:var(--ink)}
+.steps li.done::before{background:var(--accent);color:#fff}
+.note{font-size:13.5px;color:var(--muted);margin:0;font-family:var(--km);line-height:1.7}
+.note b{color:var(--ink)}
+.kbd{font-family:var(--mono);font-size:11px;background:var(--sunken);padding:2px 6px;
+  border-radius:4px;color:var(--muted)}
+
+/* ── app primitives ── */
+.h1a{font-size:calc(30px*var(--fs));font-weight:600;letter-spacing:-.02em;margin:14px 0 16px;line-height:1.25}
+.h2a{font-size:calc(19px*var(--fs));font-weight:600;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:calc(13px*var(--fs))}
+.card{border:1px solid var(--hairline);border-radius:16px;background:var(--raised);padding:14px 16px}
+.card+.card{margin-top:10px}
+.tap{cursor:pointer;transition:transform .12s,border-color .12s}
+.tap:active{transform:scale(.985)}
+.tap:hover{border-color:var(--faint)}
+.lift{box-shadow:0 3px 14px rgba(0,0,0,.07)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hr{height:1px;background:var(--hairline2);margin:12px 0}
+.lbl{color:var(--faint);font-size:calc(12px*var(--fs))}
+.val{font-size:calc(17px*var(--fs));font-weight:600}
+.cta{width:100%;background:var(--accent);color:#fff;border:0;border-radius:999px;
+  padding:17px 20px;font-size:calc(16px*var(--fs));font-weight:600;cursor:pointer;
+  font-family:var(--km);margin-top:14px;display:flex;justify-content:center;gap:8px;
+  align-items:center;min-height:56px}
+.cta.split{justify-content:space-between}
+.cta:disabled{background:var(--hairline);color:var(--faint);cursor:not-allowed}
+.cta:active:not(:disabled){transform:scale(.985)}
+.strip{display:flex;gap:7px;margin-top:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.strip::-webkit-scrollbar{display:none}
+.chip{border:0;background:var(--sunken);color:var(--muted);border-radius:11px;
+  padding:10px 14px;font-size:calc(13px*var(--fs));cursor:pointer;white-space:nowrap;
+  font-family:var(--km);min-height:44px}
+.chip.on{background:var(--ink);color:var(--ground);font-weight:600}
+.back{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer;padding:8px 10px 8px 0;line-height:1}
+.nav{display:flex;align-items:center;justify-content:space-between;padding-top:6px;margin-bottom:4px;min-height:44px}
+.seg{display:flex;background:var(--sunken);border-radius:11px;padding:3px;margin:12px 0 14px}
+.seg button{flex:1;border:0;background:none;padding:9px;border-radius:9px;cursor:pointer;
+  font-family:var(--km);font-size:calc(13px*var(--fs));color:var(--muted)}
+.seg button.on{background:var(--raised);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.pill{font-size:calc(11px*var(--fs));border-radius:999px;padding:3px 9px;font-family:var(--km);white-space:nowrap}
+.pill.blue{background:var(--accentSoft);color:var(--accent)}
+.pill.warn{background:var(--warnSoft);color:var(--warn)}
+.pill.ok{background:var(--okSoft);color:var(--ok)}
+.banner{border-radius:12px;padding:11px 14px;font-size:calc(13px*var(--fs));
+  display:flex;gap:9px;align-items:flex-start;margin-bottom:12px;font-family:var(--km)}
+.banner.warn{background:var(--warnSoft);color:var(--warn)}
+.banner.blue{background:var(--accentSoft);color:var(--accent)}
+.sect{font-size:calc(13px*var(--fs));color:var(--faint);margin:20px 0 9px;font-family:var(--km)}
+
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--sunken) 25%,var(--hairline) 50%,var(--sunken) 75%);
+  background-size:200% 100%;animation:sh 1.3s infinite;border-radius:7px}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.sk{animation:none}}
+
+/* seat map */
+.car{border:2px solid var(--hairline);border-radius:22px;background:var(--sunken);
+  padding:16px;margin:8px auto 0;width:210px}
+.srow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:9px}
+.seat{aspect-ratio:1;border-radius:10px;border:1.5px solid var(--hairline);background:var(--raised);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-size:calc(12px*var(--fs));color:var(--muted);cursor:pointer;font-weight:600;
+  transition:transform .14s,background .14s}
+.seat:active{transform:scale(.94)}
+.seat.sug{background:var(--accentSoft);border:2px dashed var(--accent);color:var(--accent)}
+.seat.pick{background:var(--accent);border-color:var(--accent);color:#fff;transform:scale(1.06)}
+.seat.gone{background:var(--hairline);border-color:var(--hairline);color:var(--faint);cursor:not-allowed}
+.seat.gone:active{transform:none;animation:nx .3s}
+@keyframes nx{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.seat.vip{border-color:var(--warn);color:var(--warn)}
+.seat.drv{background:var(--ink);border-color:var(--ink);color:var(--ground);cursor:default}
+.seat .tag{font-size:calc(8px*var(--fs));font-weight:500;font-family:var(--km)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px;font-size:calc(12px*var(--fs));
+  color:var(--muted);font-family:var(--km)}
+.qr{width:172px;height:172px;margin:14px auto 8px;border-radius:10px;border:1px solid var(--hairline);
+  background:repeating-linear-gradient(90deg,var(--ink) 0 7px,transparent 7px 14px),
+  repeating-linear-gradient(0deg,var(--ink) 0 7px,transparent 7px 14px),var(--raised);opacity:.85}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:20;opacity:0;
+  animation:fi .2s forwards;border-radius:33px}
+@keyframes fi{to{opacity:1}}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--raised);
+  border-radius:28px 28px 33px 33px;z-index:21;padding:10px 20px 26px;max-height:78%;
+  overflow-y:auto;transform:translateY(100%);animation:up .28s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes up{to{transform:translateY(0)}}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--hairline);margin:0 auto 14px}
+.opt{display:flex;align-items:center;gap:12px;padding:14px 0;cursor:pointer;
+  border-bottom:1px solid var(--hairline2);font-size:calc(15px*var(--fs));min-height:52px}
+.opt:last-child{border:0}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--hairline);flex:none}
+.dot.on{border-color:var(--accent);background:radial-gradient(circle,var(--accent) 0 5.5px,transparent 5.5px)}
+.inp{width:100%;border:1px solid var(--hairline);border-radius:12px;padding:14px;
+  font-size:calc(15px*var(--fs));font-family:var(--km);background:var(--sunken);color:var(--ink);min-height:52px}
+.inp:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+button:focus-visible,.tap:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;
+  border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;text-align:center;gap:12px;padding:0 20px}
+</style>
+
+<div class="lab">
+  <div class="head">
+    <p class="eyebrow">Tabi · តាប៊ី — Interactive Prototype · UX v3</p>
+    <h1>Prototype ដំណើរការពិត — សាកល្បងមុនសរសេរ Flutter</h1>
+    <p class="sf km">ចុចបានទាំងអស់។ លំហូរពេញលេញ៖ ស្វែងរក → លទ្ធផល → កៅអី → ពិនិត្យ&បង់ → សំបុត្រ។
+      សាកល្បង offline · អក្សរធំ · ងងឹត ដោយប៊ូតុងខាងស្តាំ។</p>
+  </div>
+
+  <div class="stage">
+    <div class="device">
+      <div class="phone"><div class="screen" id="screen"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="grp">
+        <h3>ស្ថានភាពសាកល្បង</h3>
+        <div class="toggles">
+          <button class="tg" id="tOff" onclick="toggleOffline()">📵 គ្មានអ៊ីនធឺណិត</button>
+          <button class="tg" id="tBig" onclick="toggleBig()">🔠 អក្សរ 175%</button>
+          <button class="tg" id="tDark" onclick="toggleDark()">🌙 ងងឹត</button>
+          <button class="tg" id="tNew" onclick="toggleNew()">👤 អ្នកប្រើថ្មី</button>
+          <button class="tg on" id="tLayout" onclick="toggleLayout()">🅰 Home A</button>
+          <button class="tg" onclick="reset()">↺ ចាប់ផ្តើមឡើងវិញ</button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h3>លំហូរបរាជ័យ · docs/02 §B7</h3>
+        <div class="toggles">
+          <button class="tg" onclick="setHold(150)">⏱ នៅ 2:30</button>
+          <button class="tg" onclick="setHold(45)">⏱ នៅ 0:45</button>
+          <button class="tg" onclick="setHold(0)">⏱ ផុតកំណត់</button>
+          <button class="tg" onclick="failSeatTaken()">✕ កៅអីត្រូវគេយក</button>
+          <button class="tg" onclick="failDeclined()">✕ ធនាគារបដិសេធ</button>
+          <button class="tg" onclick="failLostSeat()">⚠ បង់រួច តែកៅអីបាត់</button>
+        </div>
+        <p class="note" style="margin-top:12px">នាឡិកា<b>ស្ងាត់លើស 3:00</b> ·
+          ខ្សឹប 3:00–1:00 · ស្រែកក្រោម 1:00។ ចុចប៊ូតុងខាងលើពេលនៅអេក្រង់
+          <b>កៅអី</b> ឬ <b>បង់ប្រាក់</b>។</p>
+      </div>
+
+      <div class="grp">
+        <h3>លំហូរកក់</h3>
+        <ol class="steps" id="steps">
+          <li data-s="home">ទំព័រដើម — ស្វែងរកនៅជានិច្ច</li>
+          <li data-s="results">លទ្ធផល — skeleton រួច ដំណើរពេញនៅបាត</li>
+          <li data-s="seat">កៅអី — ណែនាំ តែប្តូរបានជានិច្ច</li>
+          <li data-s="pay">ពិនិត្យ & បង់ — ជួរកែបាន</li>
+          <li data-s="ticket">សំបុត្រ — QR ដំណើរការ offline</li>
+        </ol>
+      </div>
+
+      <div class="grp">
+        <h3>ការកែទាំង ៧</h3>
+        <p class="note" id="hint"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CITIES=[
+ {k:'PNH',n:'ភ្នំពេញ'},{k:'SRP',n:'សៀមរាប'},{k:'BTB',n:'បាត់ដំបង'},
+ {k:'PVH',n:'ព្រះវិហារ'},{k:'KPT',n:'កំពត'},{k:'KPS',n:'កំពង់ស្ពឺ'},
+ {k:'SHV',n:'ព្រះសីហនុ'},{k:'KTH',n:'កំពង់ធំ'}];
+
+const HINTS={
+ home:'<b>#3 offline-first · #4 ផ្លូវថ្មីៗ · #6 ស្វែងរកជានិច្ច។</b> បើក 📵 — ការស្វែងរកថ្មីៗ សំបុត្រ និងទិសដៅ cache នៅតែឃើញ។ កាតដំណើរជិតមកដល់ទទួលអាទិភាពមើលឃើញ តែ<b>គ្មានប៊ូតុងក្នុងកាត</b> ដូច្នេះ <span class="kbd">ស្វែងរក</span> នៅតែជា primary តែមួយ។',
+ results:'<b>#5 skeleton មិនមែន spinner។</b> កាត skeleton មានរូបរាងដូចលទ្ធផលពិត ដូច្នេះទំព័រមិនលោតពេលទិន្នន័យមកដល់។ ដំណើរពេញបង្រួមទៅជួរតែមួយនៅបាត។',
+ seat:'<b>#2 ណែនាំប៉ុណ្ណោះ។</b> កៅអីណែនាំមានស៊ុម<b>ដាច់ៗ</b> + ស្លាក «ណែនាំ» + របាំងពន្យល់ច្បាស់។ វា<b>មិនដែលបញ្ចប់ដោយស្វ័យប្រវត្តិទេ</b> — ចុចកៅអីផ្សេងមើល ស្លាកនឹងប្តូរទៅ «អ្នកបានជ្រើស»។',
+ pay:'<b>#7 cognitive load ទាបជាងចំនួនអេក្រង់តិច។</b> ជួរអ្នកដំណើរជា<b>ការកែតម្រូវ</b> មិនមែនការសម្រេចចិត្ត។ បើក 👤 អ្នកប្រើថ្មី — ទីតាំងទទួលទទេ ប៊ូតុងបិទ<b>ព្រមទាំងពន្យល់មូលហេតុ</b>។',
+ ticket:'<b>#3 offline-first។</b> បើក 📵 — សំបុត្រនៅតែដំណើរការពេញលេញ។ គ្មានពណ៌ខៀវ ព្រោះសកម្មភាពគឺ<b>លើកទូរសព្ទឡើង</b>។',
+ tickets:'<b>#4 ចុចតិចបំផុត។</b> <span class="kbd">កក់ម្តងទៀត</span> = ២ ចុចទៅសំបុត្រថ្មី។ ~60% នៃចរាចរណ៍ជាដំណើរដដែល ដូច្នេះនេះជាផ្លូវសំខាន់បំផុត។',
+ refund:'<b>BR-REF-06 — ករណីអាក្រក់បំផុត។</b> លុយចេញ តែកៅអីបាត់។ ការបង្វិលសង<b>ស្វ័យប្រវត្តិ</b> ហើយការកក់ឡើងវិញ<b>មិនគិតថ្លៃ</b>។ អតិថិជនមិនចាំបាច់សុំ ហើយមិនចាំបាច់រកឃើញវាដោយខ្លួនឯង។',
+ profile:'អេក្រង់នេះ<b>គ្មាន primary action</b> — ត្រឹមត្រូវ។ វាជាអេក្រង់កំណត់ មិនមែនអេក្រង់ធ្វើការ។'};
+
+let S={};
+function reset(){
+  S={tab:'home',screen:null,seg:'up',layout:'A',
+    from:'ភ្នំពេញ',to:'សៀមរាប',date:0,
+    journey:null,seat:null,seatFrom:null,
+    pickup:'មុខផ្សារ Lucky ទួលគោក',passenger:'សុខ ដារ៉ា',phone:'012 345 678',
+    pay:'khqr',sheet:null,loading:false,paying:false,showSold:false,
+    hold:600,holdExpired:false,payError:null,extraTaken:[],
+    offline:false,big:false,newUser:false,
+    recent:[{f:'ភ្នំពេញ',t:'សៀមរាប'},{f:'ភ្នំពេញ',t:'បាត់ដំបង'},{f:'សៀមរាប',t:'ភ្នំពេញ'}],
+    tickets:[{ref:'TB-4K7Q2',f:'ភ្នំពេញ',t:'សៀមរាប',d:'ស្អែក',tm:'07:00',seat:'2B',op:'Sok Taxi',plate:'2AB-1234',drv:'លោក សុខ វុទ្ធី',up:true}],
+    past:[{ref:'TB-9M2X8',f:'ភ្នំពេញ',t:'បាត់ដំបង',d:'២០ កក្កដា',price:'$10.00'},
+          {ref:'TB-7H4L1',f:'សៀមរាប',t:'ភ្នំពេញ',d:'១២ កក្កដា',price:'$12.00'}]};
+  document.documentElement.style.setProperty('--fs',1);
+  ['tOff','tBig','tNew'].forEach(i=>document.getElementById(i).classList.remove('on','warnon'));
+  render();
+}
+const DATES=['ថ្ងៃនេះ','ស្អែក','២៩','៣០','៣១','១ សីហា','២ សីហា'];
+const JOURNEYS=[
+ {t:'06:00',p:'$10.00',op:'Sok Taxi',v:'Camry',left:0,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:false,sold:true},
+ {t:'07:00',p:'$10.00',op:'Sok Taxi',v:'Camry',left:3,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:false},
+ {t:'08:30',p:'$12.00',op:'Mekong Van',v:'Hiace',left:9,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:false},
+ {t:'09:30',p:'$10.00',op:'Angkor Express',v:'Camry',left:0,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:false,sold:true},
+ {t:'13:00',p:'$10.00',op:'Sok Taxi',v:'Camry',left:2,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:true},
+ {t:'15:30',p:'$11.00',op:'Angkor Express',v:'Hiace',left:6,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:false},
+ {t:'17:00',p:'$11.00',op:'Mekong Van',v:'Hiace',left:0,road:'ផ្លូវជាតិ ៦',dur:'៥ ម៉ោង',vip:false,sold:true}];
+const SEATS=[['drv','',{c:'1A',cls:'vip'}],[{c:'2A',gone:true},{c:'2B'},{c:'2C'}]];
+
+const KH=n=>String(n).replace(/[0-9]/g,d=>'០១២៣៤៥៦៧៨៩'[+d]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toggleOffline(){S.offline=!S.offline;document.getElementById('tOff').classList.toggle('warnon',S.offline);
+  if(S.offline&&(S.screen==='results'||S.screen==='seat'||S.screen==='pay')){S.screen=null;S.tab='home'}render()}
+function toggleBig(){S.big=!S.big;document.documentElement.style.setProperty('--fs',S.big?1.75:1);
+  document.getElementById('tBig').classList.toggle('on',S.big);render()}
+function toggleDark(){const r=document.documentElement;
+  const d=r.getAttribute('data-theme')==='dark';r.setAttribute('data-theme',d?'light':'dark');
+  document.getElementById('tDark').classList.toggle('on',!d)}
+function toggleLayout(){S.layout=S.layout==='A'?'B':'A';
+  const b=document.getElementById('tLayout');
+  b.textContent=S.layout==='A'?'🅰 Home A':'🅱 Home B';
+  b.classList.toggle('on',true);go('home')}
+function toggleNew(){S.newUser=!S.newUser;document.getElementById('tNew').classList.toggle('on',S.newUser);
+  S.pickup=S.newUser?'':'មុខផ្សារ Lucky ទួលគោក';
+  S.tickets=S.newUser?[]:reset0().tickets;S.past=S.newUser?[]:reset0().past;
+  S.recent=S.newUser?[]:reset0().recent;render()}
+function reset0(){return{tickets:[{ref:'TB-4K7Q2',f:'ភ្នំពេញ',t:'សៀមរាប',d:'ស្អែក',tm:'07:00',seat:'2B',op:'Sok Taxi',plate:'2AB-1234',drv:'លោក សុខ វុទ្ធី',up:true}],
+  past:[{ref:'TB-9M2X8',f:'ភ្នំពេញ',t:'បាត់ដំបង',d:'២០ កក្កដា',price:'$10.00'},{ref:'TB-7H4L1',f:'សៀមរាប',t:'ភ្នំពេញ',d:'១២ កក្កដា',price:'$12.00'}],
+  recent:[{f:'ភ្នំពេញ',t:'សៀមរាប'},{f:'ភ្នំពេញ',t:'បាត់ដំបង'},{f:'សៀមរាប',t:'ភ្នំពេញ'}]}}
+
+function go(t){S.tab=t;S.screen=null;S.sheet=null;render()}
+function swap(){[S.from,S.to]=[S.to,S.from];render()}
+function openSheet(k){S.sheet=k;render()}
+function closeSheet(){S.sheet=null;render()}
+function pickCity(n){if(S.sheet==='from')S.from=n;else S.to=n;S.sheet=null;render()}
+function pickDate(i){S.date=i;render()}
+function search(){
+  if(S.offline)return;
+  S.recent=[{f:S.from,t:S.to},...S.recent.filter(r=>!(r.f===S.from&&r.t===S.to))].slice(0,3);
+  S.screen='results';S.loading=true;render();
+  setTimeout(()=>{S.loading=false;render()},1100);
+}
+function reSearch(f,t){S.from=f;S.to=t;search()}
+function openJourney(i){
+  S.journey=JOURNEYS[i];
+  S.hold=600;S.holdExpired=false;S.payError=null;S.extraTaken=[];
+  S.seat='2B';S.seatFrom='suggested';   // suggestion, never final
+  S.screen='seat';render();
+}
+function pickSeat(c,gone){if(gone)return;S.seat=c;S.seatFrom='user';render()}
+function toPay(){S.screen='pay';render()}
+function payNow(){
+  if(!S.pickup||S.holdExpired)return;
+  S.payError=null;
+  S.paying=true;render();
+  setTimeout(()=>{
+    S.paying=false;
+    const j=S.journey;
+    S.tickets=[{ref:'TB-'+Math.random().toString(36).slice(2,7).toUpperCase(),f:S.from,t:S.to,
+      d:DATES[S.date],tm:j.t,seat:S.seat,op:j.op,plate:'2AB-1234',drv:'លោក សុខ វុទ្ធី',up:true},...S.tickets];
+    S.screen='ticket';render();
+  },1400);
+}
+/* ── Hold countdown (revision #3: graduated, not a red clock) ──────────────
+   BR-INV-03 needs a 10-minute hold, but a large timer creates anxiety and
+   raises abandonment. It stays silent above 3:00, whispers between 3:00 and
+   1:00, and only shouts under a minute. 90% of customers finish inside three
+   minutes and never see it at all. */
+const mmss=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+
+function holdTick(){
+  if(S.holdExpired) return;
+  if(S.screen!=='seat' && S.screen!=='pay') return;
+  S.hold--;
+  if(S.hold<=0){ S.hold=0; S.holdExpired=true; }
+  render();
+}
+setInterval(holdTick,1000);
+
+function setHold(sec){S.hold=sec;S.holdExpired=sec<=0;render()}
+function renewHold(){S.hold=600;S.holdExpired=false;S.payError=null;render()}
+
+function holdBanner(){
+  if(S.holdExpired) return `<div class="banner warn km"><span>⏱</span>
+    <span>ពេលវេលាទុកកៅអីអស់ហើយ។
+    <b style="text-decoration:underline;cursor:pointer" onclick="renewHold()">ចុចដើម្បីទុកម្តងទៀត</b></span></div>`;
+  if(S.hold>180) return '';                       // silent — the common case
+  if(S.hold>60) return `<div class="sub km" style="text-align:right;font-family:var(--mono);margin-bottom:8px">
+    កៅអីទុកសម្រាប់អ្នក ${mmss(S.hold)}</div>`;
+  return `<div class="banner warn km"><span>⏱</span>
+    <span>កៅអីទុកសម្រាប់អ្នកតែ ${mmss(S.hold)} ទៀត</span></div>`;
+}
+
+/* ── Failure injectors — the flows docs/02 §B7 specified but nobody has seen ── */
+
+// BR-INV-01: another customer claimed the seat between choice and payment.
+function failSeatTaken(){
+  if(!S.seat){alert('ជ្រើសកៅអីសិន');return}
+  S.extraTaken=[...S.extraTaken,S.seat];
+  S.seat=null;S.seatFrom=null;S.screen='seat';
+  S.payError={kind:'seatTaken'};
+  render();
+}
+
+// The bank said no. Stay on the screen, keep everything, offer another method.
+function failDeclined(){
+  if(S.screen!=='pay'){alert('ទៅអេក្រង់បង់ប្រាក់សិន');return}
+  S.paying=true;render();
+  setTimeout(()=>{S.paying=false;S.payError={kind:'declined'};render()},1200);
+}
+
+// BR-REF-06 — the worst case: money taken, seat gone. Refund must be
+// automatic and must never require the customer to ask.
+function failLostSeat(){
+  if(S.screen!=='pay'){alert('ទៅអេក្រង់បង់ប្រាក់សិន');return}
+  S.paying=true;render();
+  setTimeout(()=>{S.paying=false;S.screen='refund';render()},1600);
+}
+
+function openCancel(){S.sheet='cancel';render()}
+function confirmCancel(){
+  S.tickets=S.tickets.slice(1);
+  S.sheet=null;S.screen=null;S.tab='tickets';S.seg='up';render();
+}
+
+function bookAgain(p){S.from=p.f;S.to=p.t;S.date=1;go('home');search()}
+
+/* ── render ── */
+function render(){
+  const el=document.getElementById('screen');
+  let body='',tabs=true;
+  if(S.screen==='results'){body=vResults();tabs=false}
+  else if(S.screen==='seat'){body=vSeat();tabs=false}
+  else if(S.screen==='pay'){body=vPay();tabs=false}
+  else if(S.screen==='ticket'){body=vTicket();tabs=false}
+  else if(S.screen==='refund'){body=vRefund();tabs=false}
+  else if(S.tab==='home')body=vHome();
+  else if(S.tab==='tickets')body=vTickets();
+  else body=vProfile();
+
+  el.innerHTML=`
+    <div class="status"><span>9:41</span><span>${S.offline?'📵 &nbsp;':'✦ &nbsp;'}100%</span></div>
+    <div class="viewport" id="vp">${body}</div>
+    ${tabs?`<div class="tabbar">
+      <button class="${S.tab==='home'?'on':''}" onclick="go('home')"><span class="ic">⌂</span><span class="km">ទំព័រដើម</span></button>
+      <button class="${S.tab==='tickets'?'on':''}" onclick="go('tickets')"><span class="ic">▤</span><span class="km">សំបុត្រ</span></button>
+      <button class="${S.tab==='profile'?'on':''}" onclick="go('profile')"><span class="ic">◯</span><span class="km">គណនី</span></button>
+    </div>`:''}
+    ${S.sheet?vSheet():''}`;
+
+  const key=S.screen||S.tab;
+  document.getElementById('hint').innerHTML=HINTS[key]||HINTS.home;
+  const order=['home','results','seat','pay','ticket'];
+  document.querySelectorAll('#steps li').forEach(li=>
+    li.classList.toggle('done',order.indexOf(li.dataset.s)<=order.indexOf(key)&&order.includes(key)));
+}
+
+function vHome(){
+  const up=S.tickets.find(t=>t.up);
+
+  const offlineBanner=S.offline
+    ? `<div class="banner warn" style="margin-top:12px"><span>📵</span><span>គ្មានអ៊ីនធឺណិត — សំបុត្រ និងទិន្នន័យរក្សាទុកនៅតែប្រើបាន</span></div>`:'';
+
+  // Upcoming trip: visual priority, but NO button inside — the whole card is
+  // the tap target, so Search stays the only filled primary action (rule #6).
+  const upcomingBlock=up
+    ? `<div class="card lift tap" onclick="S.screen='ticket';render()">
+        <div class="row"><span class="pill blue km">ដំណើរជិតមកដល់</span><span style="font-size:20px">▣</span></div>
+        <div class="h2a km" style="margin-top:10px">${esc(up.f)} → ${esc(up.t)}</div>
+        <div class="sub km">${esc(up.d)} · ${up.tm} · កៅអី ${up.seat}</div>
+        <div class="sub km" style="margin-top:2px">${esc(up.op)} · ${up.plate}</div>
+      </div>`:'';
+
+  const searchBlock=`
+    <div class="h1a km" style="margin-top:${S.layout==='B'&&up?'20px':'14px'}">ទៅណា?</div>
+    <div class="card">
+      <div class="row">
+        <div style="flex:1;cursor:pointer" onclick="openSheet('from')">
+          <div class="lbl km">ចេញពី</div><div class="val km">${esc(S.from)}</div></div>
+        <button class="chip" style="min-height:44px;width:44px;padding:0" onclick="swap()" aria-label="swap">⇅</button>
+      </div>
+      <div class="hr"></div>
+      <div style="cursor:pointer" onclick="openSheet('to')">
+        <div class="lbl km">ទៅ</div><div class="val km">${esc(S.to)}</div></div>
+    </div>
+    <div class="strip">${DATES.map((d,i)=>
+      `<button class="chip ${i===S.date?'on':''}" onclick="pickDate(${i})">${d}</button>`).join('')}</div>
+    <button class="cta km" onclick="search()" ${S.offline?'disabled':''}>
+      ${S.offline?'ត្រូវការអ៊ីនធឺណិតដើម្បីស្វែងរក':'ស្វែងរក'}</button>`;
+
+  const recentBlock=S.recent.length
+    ? `<div class="sect km">ស្វែងរកថ្មីៗ</div>
+       ${S.recent.map(r=>`<div class="card tap" style="padding:12px 16px" onclick="reSearch('${r.f}','${r.t}')">
+         <div class="row"><span class="km" style="font-size:calc(15px*var(--fs))">${esc(r.f)} → ${esc(r.t)}</span>
+         <span style="color:var(--faint)">›</span></div></div>`).join('')}`:'';
+
+  const popularBlock=`<div class="sect km">ទិសដៅពេញនិយម</div>
+    <div class="strip" style="margin-top:0">${CITIES.slice(1,6).map(c=>
+      `<button class="chip" onclick="S.to='${c.n}';render()">${c.n}</button>`).join('')}</div>`;
+
+  const divider=up?`<div class="hr" style="margin:18px 0"></div>`:'';
+
+  // A = Search first (stable primary position). B = Upcoming first.
+  const ordered = S.layout==='A'
+    ? searchBlock + (up?`<div style="height:22px"></div>`+upcomingBlock:'')
+    : (up?upcomingBlock+divider:'') + searchBlock;
+
+  return offlineBanner + ordered + recentBlock + popularBlock + `<div style="height:24px"></div>`;
+}
+
+function vResults(){
+  if(S.loading)return `
+    <div class="nav"><button class="back" onclick="S.screen=null;render()">‹</button></div>
+    <div class="h2a km">${esc(S.from)} → ${esc(S.to)}</div>
+    <div class="sub km" style="margin-bottom:16px">${DATES[S.date]}</div>
+    ${[0,1,2].map(()=>`<div class="card" style="border-color:var(--hairline2)">
+      <div class="row"><div class="sk" style="width:74px;height:22px"></div><div class="sk" style="width:60px;height:20px"></div></div>
+      <div class="sk" style="width:130px;height:13px;margin-top:10px"></div>
+      <div class="sk" style="width:170px;height:11px;margin-top:8px"></div></div>`).join('')}`;
+  return `
+    <div class="nav"><button class="back" onclick="S.screen=null;render()">‹</button>
+      <span class="sub km">តម្រៀបតាមម៉ោង</span></div>
+    <div class="h2a km">${esc(S.from)} → ${esc(S.to)}</div>
+    <div class="sub km" style="margin-bottom:16px">${DATES[S.date]} · ${KH(JOURNEYS.filter(j=>!j.sold).length)} ដំណើរទំនេរ</div>
+    ${JOURNEYS.map((j,i)=>j.sold?'':`<div class="card tap" onclick="openJourney(${i})">
+      <div class="row"><span style="font-size:calc(24px*var(--fs));font-weight:600;letter-spacing:-.02em">${j.t}</span>
+        <span style="font-size:calc(18px*var(--fs));font-weight:600">${j.p}</span></div>
+      <div class="sub" style="margin-top:4px">${j.op} · ${j.v}</div>
+      <div class="row" style="margin-top:6px">
+        <span class="sub km">${j.road} · ${j.dur}</span>
+        <span class="pill ${j.vip?'warn':'ok'} km">${j.vip?'⭑ កៅអីមុខ':'នៅ '+j.left+' កៅអី'}</span></div>
+    </div>`).join('')}
+    <div class="hr" style="margin:18px 0 0"></div>
+    <div class="row tap" style="padding:14px 2px;cursor:pointer"
+      onclick="S.showSold=!S.showSold;render()">
+      <span class="km sub">${KH(JOURNEYS.filter(j=>j.sold).length)} ដំណើរពេញហើយ</span>
+      <span style="color:var(--faint)">${S.showSold?'⌃':'›'}</span></div>
+    <div class="hr" style="margin:0 0 12px"></div>
+    ${S.showSold?JOURNEYS.map(j=>j.sold?`<div class="card" style="opacity:.55;margin-bottom:8px">
+      <div class="row"><span class="time">${j.t}</span><span class="price">${j.p}</span></div>
+      <div class="sub" style="margin-top:2px">${j.op} · ${j.v}</div>
+      <div class="metaline km"><span>${j.road} · ${j.dur}</span>
+        <span style="color:var(--warn)">ពេញហើយ</span></div></div>`:'').join(''):''}
+    <div style="height:24px"></div>`;
+}
+
+function vSeat(){
+  const j=S.journey,sug=S.seatFrom==='suggested';
+  if(!S.seat&&!S.extraTaken.length){/* first open keeps the suggestion */}
+  return `
+  <div class="nav"><button class="back" onclick="S.screen='results';render()">‹</button>
+    <span class="sub km" style="cursor:pointer" onclick="openSheet('info')">ⓘ ព័ត៌មានដំណើរ</span></div>
+  <div class="h2a km">ជ្រើសកៅអី</div>
+  <div class="sub" style="margin-bottom:12px">${j.t} · ${j.op} · ${j.v}</div>
+
+  ${holdBanner()}
+  ${S.payError&&S.payError.kind==='seatTaken'?`<div class="banner warn km"><span>!</span>
+    <span>កៅអីនោះទើបមានគេកក់។ សូមជ្រើសកៅអីផ្សេង។</span></div>`:''}
+  <div class="banner ${sug?'blue':'ok'}">
+    <span>${sug?'💡':'✓'}</span>
+    <span>${sug?`យើងណែនាំកៅអី <b>${S.seat}</b> — ចុចកៅអីផ្សេងដើម្បីប្តូរ`
+              :`អ្នកបានជ្រើសកៅអី <b>${S.seat}</b>`}</span></div>
+
+  <div class="car">
+    ${SEATS.map(row=>`<div class="srow">${row.map(s=>{
+      if(s==='drv')return `<div class="seat drv">🚗</div>`;
+      if(s==='')return `<div></div>`;
+      const on=S.seat===s.c, gone=!!s.gone||S.extraTaken.includes(s.c);
+      const cls=gone?'gone':on?(sug?'sug':'pick'):(s.cls==='vip'?'vip':'');
+      return `<div class="seat ${cls}" onclick="pickSeat('${s.c}',${gone})"
+        role="button" tabindex="0" aria-label="កៅអី ${s.c}">
+        <span>${gone?'✕':s.c}</span>
+        ${on?`<span class="tag">${sug?'ណែនាំ':'បានជ្រើស'}</span>`:s.cls==='vip'?`<span class="tag">⭑ +$2</span>`:''}
+      </div>`}).join('')}</div>`).join('')}
+    <div style="height:8px;border-radius:4px;background:var(--hairline);margin:2px 20px 0"></div>
+  </div>
+
+  <div class="legend">
+    <span>○ ទំនេរ</span><span style="color:var(--accent)">● ជ្រើសរួច</span>
+    <span>✕ កក់រួច</span><span style="color:var(--warn)">⭑ កៅអីមុខ +$2</span></div>
+
+  ${S.seat?`<button class="cta split km" onclick="toPay()">
+    <span>កៅអី ${S.seat} · ${j.p}</span><span>បន្ត ›</span></button>`
+  :`<button class="cta km" disabled style="background:var(--hairline);color:var(--faint)">
+    ជ្រើសកៅអីមួយ</button>`}
+  <div style="height:20px"></div>`;
+}
+
+function vPay(){
+  const j=S.journey,need=!S.pickup;
+  return `
+  <div class="nav"><button class="back" onclick="S.screen='seat';render()">‹</button></div>
+  ${holdBanner()}
+  <div class="h2a km">ពិនិត្យ និងបង់ប្រាក់</div>
+  <div class="sub km" style="margin-bottom:4px">${esc(S.from)} → ${esc(S.to)} · ${DATES[S.date]}</div>
+  <div class="sub km" style="margin-bottom:16px">${j.t} · ${j.op} · កៅអី ${S.seat}</div>
+
+  <div class="card" style="padding:4px 16px">
+    <div class="row tap" style="padding:14px 0;cursor:pointer" onclick="openSheet('name')">
+      <span class="lbl km">អ្នកដំណើរ</span>
+      <span class="km" style="font-weight:600">${esc(S.passenger)} ›</span></div>
+    <div class="hr" style="margin:0"></div>
+    <div class="row tap" style="padding:14px 0;cursor:pointer" onclick="openSheet('name')">
+      <span class="lbl km">ទូរសព្ទ</span><span style="font-weight:600">${S.phone} ›</span></div>
+    <div class="hr" style="margin:0"></div>
+    <div class="row tap" style="padding:14px 0;cursor:pointer" onclick="openSheet('pickup')">
+      <span class="lbl km">ទទួលនៅ</span>
+      <span class="km" style="font-weight:600;color:${need?'var(--warn)':'inherit'};text-align:right;max-width:58%">
+        ${need?'ត្រូវការ ›':esc(S.pickup)+' ›'}</span></div>
+  </div>
+
+  <div class="sect km">វិធីបង់ប្រាក់</div>
+  <div class="card" style="padding:4px 16px">
+    ${[['khqr','KHQR','ណែនាំ'],['aba','ABA Pay',''],['card','កាត Visa / Mastercard',''],
+       ['dep','កក់ $2 · បង់ $8 ជូនអ្នកបើកបរ','']].map(([k,n,p])=>`
+      <div class="opt" onclick="S.pay='${k}';render()">
+        <span class="dot ${S.pay===k?'on':''}"></span>
+        <span class="km" style="flex:1">${n}</span>
+        ${p?`<span class="pill blue km">${p}</span>`:''}</div>`).join('')}
+  </div>
+
+  <div class="row" style="margin-top:20px;align-items:flex-end">
+    <span class="lbl km">សរុប</span>
+    <span style="text-align:right">
+      <span style="font-size:calc(26px*var(--fs));font-weight:600;letter-spacing:-.02em">${j.p}</span>
+      <span class="sub" style="display:block">៛41,000</span></span></div>
+
+  ${S.payError&&S.payError.kind==='declined'?`<div class="banner warn km" style="margin-top:12px">
+    <span>!</span><span>ធនាគារមិនអនុម័តការបង់ប្រាក់នេះទេ។ សាកល្បងវិធីផ្សេង។</span></div>`:''}
+  ${need?`<div class="banner warn" style="margin-top:12px"><span>!</span>
+    <span>បំពេញទីតាំងទទួលសិន ដើម្បីឲ្យអ្នកបើកបរដឹងកន្លែងមកយកអ្នក</span></div>`:''}
+
+  <button class="cta km"
+    onclick="${S.holdExpired?'renewHold()':need?"openSheet('pickup')":'payNow()'}"
+    ${S.paying?'disabled':''}
+    style="${(need&&!S.holdExpired)?'background:var(--hairline);color:var(--faint)':''}">
+    ${S.paying?'<span class="spin"></span> កំពុងដំណើរការ…'
+      :S.holdExpired?'ទុកកៅអីម្តងទៀត'
+      :need?'បំពេញទីតាំងទទួល':'បង់ '+j.p}</button>
+  <div style="height:20px"></div>`;
+}
+
+/* BR-REF-06 — paid, then the seat was lost. The refund is automatic and the
+   rebooking offer is free. The customer never has to ask, and never has to
+   discover it themselves. */
+function vRefund(){
+  return `
+  <div class="nav km"><span></span><span></span></div>
+  <div class="center">
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--warnSoft);
+      display:grid;place-items:center;font-size:28px">↩</div>
+    <div class="h2a km">យើងបានបង្វិលសងពេញលេញ</div>
+    <div class="sub km" style="max-width:280px">
+      កៅអីនោះត្រូវបានកក់មុនការបង់ប្រាក់របស់អ្នកបញ្ចប់។
+      ប្រាក់ <b>$10.00</b> នឹងត្រឡប់ទៅគណនីរបស់អ្នកក្នុងរយៈពេល ៣ ថ្ងៃ។
+    </div>
+    <div class="card" style="width:100%;margin-top:8px">
+      <div class="sub km">ដំណើរបន្ទាប់ · មិនគិតថ្លៃបន្ថែម</div>
+      <div class="row" style="margin-top:6px">
+        <span style="font-size:calc(20px*var(--fs));font-weight:600">08:30</span>
+        <span style="font-weight:600">$12.00</span></div>
+      <div class="sub km">Mekong Van · Hiace</div>
+    </div>
+    <button class="cta km" onclick="S.screen='seat';S.seat=null;S.seatFrom=null;renewHold()">
+      កក់ដំណើរ 08:30</button>
+    <button class="chip km" style="margin-top:4px" onclick="go('home')">ត្រឡប់ទៅទំព័រដើម</button>
+  </div>`;
+}
+
+function vTicket(){
+  const t=S.tickets[0];
+  if(!t)return `<div class="center"><div style="font-size:34px">▤</div>
+    <div class="h2a km">មិនទាន់មានសំបុត្រ</div></div>`;
+  return `
+  <div class="nav"><button class="back" onclick="go('tickets')">‹</button><span class="sub">⋯</span></div>
+  ${S.offline?`<div class="banner ok"><span>✓</span><span>សំបុត្រនេះដំណើរការដោយគ្មានអ៊ីនធឺណិត</span></div>`:''}
+  <div style="text-align:center">
+    <div class="h2a km">${esc(t.f)} → ${esc(t.t)}</div>
+    <div class="sub km">${esc(t.d)} · ${t.tm}</div>
+    <div class="qr"></div>
+    <div style="font-family:var(--mono);font-size:calc(14px*var(--fs));color:var(--muted);letter-spacing:.08em">${t.ref}</div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="row">
+      <div style="display:flex;gap:12px;align-items:center">
+        <span style="width:42px;height:42px;border-radius:50%;background:var(--sunken);flex:none"></span>
+        <span><span class="km" style="font-weight:600;display:block">${esc(t.drv)}</span>
+          <span class="sub">${t.plate} · ${esc(t.op)}</span></span></div>
+      <span style="font-size:20px">📞</span></div>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <span class="km sub">កៅអី ${t.seat}</span><span class="pill ok km">បានបង់រួច</span></div>
+  <div class="row" style="margin-top:20px;gap:10px">
+    <button class="chip" style="flex:1" onclick="alert('Apple Wallet')">🎫 Wallet</button>
+    <button class="chip" style="flex:1" onclick="alert('ចែករំលែកតំណ')">↗ ចែករំលែក</button></div>
+  <div style="height:24px"></div>`;
+}
+
+function vTickets(){
+  const up=S.tickets.filter(t=>t.up);
+  if(S.seg==='up'&&!up.length)return `${vSegHead()}
+    <div class="center" style="height:60%"><div style="font-size:38px">▤</div>
+    <div class="h2a km">មិនទាន់មានសំបុត្រ</div>
+    <div class="sub km">កក់ដំណើរដំបូងរបស់អ្នក រួចសំបុត្រនឹងបង្ហាញនៅទីនេះ</div>
+    <button class="cta km" style="max-width:220px" onclick="go('home')">ស្វែងរកដំណើរ</button></div>`;
+  return `${vSegHead()}
+    ${S.seg==='up'
+      ? up.map(t=>`<div class="card lift tap" onclick="S.screen='ticket';render()">
+          <div class="row"><span class="pill blue km">${esc(t.d)} · ${t.tm}</span><span style="font-size:20px">▣</span></div>
+          <div class="h2a km" style="margin-top:10px">${esc(t.f)} → ${esc(t.t)}</div>
+          <div class="sub km">កៅអី ${t.seat} · ${esc(t.op)}</div></div>`).join('')
+      : (S.past.length?S.past.map(p=>`<div class="card">
+          <div class="row"><span class="sub km">${esc(p.d)}</span><span class="sub">${p.price}</span></div>
+          <div class="km" style="font-size:calc(17px*var(--fs));font-weight:600;margin-top:4px">${esc(p.f)} → ${esc(p.t)}</div>
+          <button class="cta km" style="margin-top:12px;padding:12px;min-height:48px"
+            onclick="bookAgain({f:'${p.f}',t:'${p.t}'})">កក់ម្តងទៀត</button></div>`).join('')
+        :`<div class="center" style="height:50%"><div class="sub km">មិនទាន់មានដំណើរកន្លងមក</div></div>`)}
+    <div style="height:24px"></div>`;
+}
+function vSegHead(){return `
+  <div class="h1a km" style="font-size:calc(26px*var(--fs));margin:14px 0 4px">សំបុត្រ</div>
+  ${S.offline?`<div class="banner ok"><span>✓</span><span>សំបុត្ររក្សាទុករួច — ប្រើបានគ្មានអ៊ីនធឺណិត</span></div>`:''}
+  <div class="seg">
+    <button class="${S.seg==='up'?'on':''}" onclick="S.seg='up';render()"><span class="km">ខាងមុខ</span></button>
+    <button class="${S.seg==='past'?'on':''}" onclick="S.seg='past';render()"><span class="km">កន្លងមក</span></button>
+  </div>`}
+
+function vProfile(){return `
+  <div class="h1a km" style="font-size:calc(26px*var(--fs));margin:14px 0 16px">គណនី</div>
+  <div class="card" style="padding:4px 16px">
+    ${[['ឈ្មោះ',S.passenger],['ទូរសព្ទ',S.phone],['ភាសា','ខ្មែរ']].map(([k,v],i,a)=>`
+      <div class="row" style="padding:15px 0"><span class="lbl km">${k}</span>
+        <span class="km" style="font-weight:600">${esc(v)} ›</span></div>
+      ${i<a.length-1?'<div class="hr" style="margin:0"></div>':''}`).join('')}
+  </div>
+  <div class="card" style="padding:4px 16px;margin-top:14px">
+    <div class="row" style="padding:15px 0"><span class="km">ជំនួយ · Telegram</span><span class="sub">›</span></div>
+    <div class="hr" style="margin:0"></div>
+    <div class="row" style="padding:15px 0"><span class="km" style="color:var(--warn)">ចាកចេញ</span><span class="sub">›</span></div>
+  </div>
+  <div class="sub" style="text-align:center;margin-top:28px;font-family:var(--mono)">Tabi 1.0.0</div>`}
+
+function vSheet(){
+  const k=S.sheet;
+  let inner='';
+  if(k==='from'||k==='to'){
+    inner=`<div class="h2a km" style="margin-bottom:12px">${k==='from'?'ចេញពី':'ទៅ'}ណា?</div>
+      ${CITIES.map(c=>`<div class="opt" onclick="pickCity('${c.n}')">
+        <span class="km" style="flex:1">${c.n}</span>
+        ${(k==='from'?S.from:S.to)===c.n?'<span style="color:var(--accent)">✓</span>':''}</div>`).join('')}`;
+  }else if(k==='pickup'){
+    inner=`<div class="h2a km" style="margin-bottom:6px">ទទួលនៅឯណា?</div>
+      <div class="sub km" style="margin-bottom:14px">សរសេរចំណុចសម្គាល់ — អ្នកបើកបរប្រើវាដើម្បីរកអ្នក</div>
+      <input class="inp km" id="pk" placeholder="ឧ. មុខផ្សារ Lucky ទួលគោក" value="${esc(S.pickup)}">
+      <div class="sub km" style="margin:14px 0 8px">ថ្មីៗ</div>
+      ${['ផ្ទះ · ផ្លូវ ២៧១','ការិយាល័យ · BKK1','អាកាសយានដ្ឋាន'].map(p=>
+        `<div class="opt" onclick="S.pickup='${p}';closeSheet()"><span class="km" style="flex:1">${p}</span></div>`).join('')}
+      <button class="cta km" onclick="S.pickup=document.getElementById('pk').value.trim();closeSheet()">រក្សាទុក</button>`;
+  }else if(k==='name'){
+    inner=`<div class="h2a km" style="margin-bottom:14px">ព័ត៌មានអ្នកដំណើរ</div>
+      <div class="lbl km" style="margin-bottom:6px">ឈ្មោះ</div>
+      <input class="inp km" id="nm" value="${esc(S.passenger)}">
+      <div class="lbl km" style="margin:14px 0 6px">ទូរសព្ទ</div>
+      <input class="inp" id="ph" value="${S.phone}">
+      <button class="cta km" onclick="S.passenger=document.getElementById('nm').value;S.phone=document.getElementById('ph').value;closeSheet()">រក្សាទុក</button>`;
+  }else if(k==='cancel'){
+    inner=`<div class="h2a km" style="margin-bottom:6px">លុបចោលការកក់?</div>
+      <div class="sub km" style="margin-bottom:14px">
+        ដំណើរចេញនៅស្អែក 07:00 — នៅសល់ជាង ២៤ ម៉ោង</div>
+      <div class="card" style="padding:4px 16px">
+        <div class="row" style="padding:12px 0"><span class="lbl km">អ្នកបានបង់</span>
+          <span style="font-weight:600">$10.00</span></div>
+        <div class="hr" style="margin:0"></div>
+        <div class="row" style="padding:12px 0"><span class="lbl km">គោលការណ៍</span>
+          <span class="km" style="font-weight:600">>២៤ ម៉ោង · ១០០%</span></div>
+        <div class="hr" style="margin:0"></div>
+        <div class="row" style="padding:12px 0">
+          <span class="km" style="font-weight:600">អ្នកនឹងទទួលបានវិញ</span>
+          <span style="font-weight:700;color:var(--ok);font-size:calc(18px*var(--fs))">$10.00</span></div>
+      </div>
+      <div class="sub km" style="margin-top:10px">ប្រាក់ត្រឡប់ក្នុងរយៈពេល ៣ ថ្ងៃ</div>
+      <button class="cta km" style="background:var(--warn)" onclick="confirmCancel()">
+        បញ្ជាក់ការលុបចោល</button>
+      <button class="chip km" style="width:100%;margin-top:8px" onclick="closeSheet()">
+        រក្សាការកក់ទុក</button>`;
+  }else if(k==='info'){
+    inner=`<div class="h2a km" style="margin-bottom:14px">ព័ត៌មានធ្វើដំណើរ</div>
+      ${[['ចំណុចទទួល','ផ្ទះ ឬចំណុចណាមួយក្នុងភ្នំពេញ'],['រថយន្ត','Toyota Camry · ម៉ាស៊ីនត្រជាក់'],
+         ['ការឈប់','ឈប់សម្រាក ១ ដង នៅកំពង់ធំ'],['បង្វិលសង','>២៤ម៉ោង ១០០% · ២–២៤ម៉ោង ៥០%']].map(([k2,v])=>
+        `<div style="padding:11px 0;border-bottom:1px solid var(--hairline2)">
+          <div class="lbl km">${k2}</div><div class="km" style="font-size:calc(15px*var(--fs))">${v}</div></div>`).join('')}
+      <button class="cta km" onclick="closeSheet()">បិទ</button>`;
+  }
+  return `<div class="scrim" onclick="closeSheet()"></div>
+    <div class="sheet"><div class="grab"></div>${inner}</div>`;
+}
+
+reset();
+</script>
