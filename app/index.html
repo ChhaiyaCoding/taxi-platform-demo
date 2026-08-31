@@ -50,10 +50,11 @@
     one instead — see web/sw.js.
   -->
   <script>
+    // Registered directly, not on window.onload: this script already runs at
+    // the end of body, after flutter_bootstrap.js (async) has been queued —
+    // load may have already fired by the time a listener is attached here.
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-      });
+      navigator.serviceWorker.register('sw.js');
     }
   </script>
 </body>
