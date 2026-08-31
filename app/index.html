@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="km">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,7 +18,8 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Tabi — your seat, guaranteed. Inter-province transport booking for Cambodia.">
+  <meta name="theme-color" content="#1A56DB">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -42,5 +43,18 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+
+  <!--
+    Flutter's own bundled service worker is deprecated and no longer
+    registers itself automatically. This is a minimal, framework-independent
+    one instead — see web/sw.js.
+  -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
 </body>
 </html>
